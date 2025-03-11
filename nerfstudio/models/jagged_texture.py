@@ -38,8 +38,8 @@ class JaggedTexture(nn.Module):
         super().__init__()
         self.out_dim = out_dim
         # self.temp = nn.Parameter(torch.zeros(1,))
-        self.texture = nn.Parameter(torch.zeros(1,self.out_dim))
-        self.register_buffer("texture_dims", texture_dims)
+        self.texture = nn.Parameter(torch.zeros(1,self.out_dim))    # 1,3
+        self.register_buffer("texture_dims", texture_dims)  # N,3
         self.init_from_dims(texture_dims, initial=True)
     
     def get_texture(self):

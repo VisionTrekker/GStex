@@ -57,6 +57,7 @@ method_configs["gstex"] = TrainerConfig(
                 orientation_method="none",
                 center_method="none",
                 auto_scale_poses=False,
+                eval_mode="all",
             ),
             cache_images_type="uint8",
         ),

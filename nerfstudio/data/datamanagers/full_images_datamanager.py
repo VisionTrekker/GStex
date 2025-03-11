@@ -59,7 +59,7 @@ class FullImageDatamanagerConfig(DataManagerConfig):
     eval_num_times_to_repeat_images: int = -1
     """When not evaluating on all images, number of iterations before picking
     new images. If -1, never pick new images."""
-    eval_image_indices: Optional[Tuple[int, ...]] = (0,)
+    eval_image_indices: Optional[Tuple[int, ...]] = (None,)
     """Specifies the image indices to use during eval; if None, uses all."""
     cache_images: Literal["cpu", "gpu"] = "cpu"
     """Whether to cache images in memory. If "cpu", caches on cpu. If "gpu", caches on device."""

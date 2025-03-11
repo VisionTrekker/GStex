@@ -3,10 +3,10 @@ from pathlib import Path
 from utils import ExperimentRunner
 
 def run_dtu_experiment(runner, exp_name, inst_name, data_name, data_dir, point_cloud_dir):
-    experiment_name = exp_name
-    instance_name = inst_name
+    experiment_name = exp_name  # scan37_nvs
+    instance_name = inst_name   # 时间
 
-    data_location = Path(data_dir) / data_name
+    data_location = Path(data_dir) / data_name  # DTU/scan37
     ply2d = Path(point_cloud_dir) / data_name / "init_nvs/point_cloud.ply"
 
     base_params = {

@@ -127,11 +127,11 @@ class Nerfstudio(DataParser):
         fnames = []
         for frame in meta["frames"]:
             filepath = Path(frame["file_path"])
-            fname = self._get_fname(filepath, data_dir)
+            fname = self._get_fname(filepath, data_dir) # 获取图片的绝对路径，并进行排序
             fnames.append(fname)
         inds = np.argsort(fnames)
         frames = [meta["frames"][ind] for ind in inds]
-
+        # 遍历所有图片读取位姿（c2w）
         for frame in frames:
             filepath = Path(frame["file_path"])
             fname = self._get_fname(filepath, data_dir)
@@ -196,6 +196,7 @@ class Nerfstudio(DataParser):
         You should check that depth_file_path is specified for every frame (or zero frames) in transforms.json.
         """
 
+        # 按train、val、test对图片进行分类
         has_split_files_spec = any(f"{split}_filenames" in meta for split in ("train", "val", "test"))
         if f"{split}_filenames" in meta:
             # Validate split first
@@ -324,7 +325,8 @@ class Nerfstudio(DataParser):
         # - dataparser_transform_matrix contains the transformation to dataparser output coordinates from original data coordinates.
         # - applied_transform contains the transformation to saved coordinates from original data coordinates.
         applied_transform = None
-        colmap_path = self.config.data / "colmap/sparse/0"
+        colmap_path = self.config.data / "sparse/0"
+        print("--------------------\n", colmap_path)
         if "applied_transform" in meta:
             applied_transform = torch.tensor(meta["applied_transform"], dtype=transform_matrix.dtype)
         elif colmap_path.exists():
@@ -353,7 +355,7 @@ class Nerfstudio(DataParser):
         except AttributeError:
             self.prompted_user = False
 
-        # Load 3D points
+        # 加载3D点云
         if self.config.load_3D_points:
             if self.config.custom_point_cloud is not None:
                 ply_file_path = self.config.custom_point_cloud

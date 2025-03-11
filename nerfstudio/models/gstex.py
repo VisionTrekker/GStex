@@ -250,11 +250,18 @@ class GStexModel(Model):
         self.register_buffer("pixel_scale", 10.0 * torch.ones(1, dtype=torch.float32))
         init_colors = None
         load_init = None
+
+        # 从2DGS输出的模型中读取初始点云
         if self.config.init_ply is not None:
+            # 一个列表，存储：高斯位置, SH直流系数, SH高频系数, 不透明度, 缩放因子, 旋转四元数
             load_init = self.load_ply(str(self.config.init_ply))
+
+            # [中心位置，SH直流系数]
             self.seed_points = [load_init[0], load_init[1]]
+
             scales = load_init[4]
             scales = torch.cat([scales, torch.ones_like(scales[:,:1])], dim=-1)
+            # [不透明度，缩放因子，旋转四元数]
             self.seed_other = [
                 load_init[3], scales, load_init[5]
             ]
@@ -276,13 +283,14 @@ class GStexModel(Model):
             self.seed_points = [init_means, init_colors]
         
         if self.seed_points is not None and not self.config.random_init:
+            # 将位置 和 SH直流系数 作为可优化的参数
             self.means = torch.nn.Parameter(self.seed_points[0])  # (Location, Color)
         else:
             self.means = torch.nn.Parameter((torch.rand((self.config.num_random, 3)) - 0.5) * self.config.random_scale)
         
         self.xys_grad_norm = None
         self.max_2Dsize = None
-        distances, _ = self.k_nearest_sklearn(self.means.data, 3)
+        distances, _ = self.k_nearest_sklearn(self.means.data, 3)   # 计算每个点的3个最近邻距离，均值作为高斯的初始缩放因子
         distances = torch.from_numpy(distances)
         # find the average of the three nearest neighbors for each point and use that as the scale
         avg_dist = distances.mean(dim=-1, keepdim=True)
@@ -304,11 +312,13 @@ class GStexModel(Model):
 
         self.mappings = torch.nn.Parameter(temp_mappings)
 
-        dim_sh = num_sh_bases(self.config.sh_degree)
+        dim_sh = num_sh_bases(self.config.sh_degree)    # 根据设置的阶数计算每个通道的SH系数个数
 
         self.register_buffer("test_colors", torch.rand((self.num_points, 3), dtype=torch.float32))
 
+        # 获取高斯的直流分量和高频分量
         if load_init is not None:
+            # 从加载的2DGS模型中 获取SH系数的直流分量和高频分量
             self.features_dc = torch.nn.Parameter(load_init[1][:,0,:])
             self.features_rest = torch.nn.Parameter(load_init[2])
         elif (
@@ -330,7 +340,9 @@ class GStexModel(Model):
             self.features_dc = torch.nn.Parameter(torch.rand(self.num_points, 3))
             self.features_rest = torch.nn.Parameter(torch.zeros((self.num_points, dim_sh - 1, 3)))
 
-        self.texture_channels = 9 + 3 * dim_sh
+        # 获取纹理
+        self.texture_channels = 9 + 3 * dim_sh  # 9 + 3*16
+        # texture_dims：N 3
         self.register_buffer(
             "texture_dims",
             torch.ones(self.num_points, 3, dtype=torch.int32)
@@ -361,7 +373,7 @@ class GStexModel(Model):
         
         self.draw_camera = None
         self.edit_info = []
-        if self.config.import_edit_json is not None:
+        if self.config.import_edit_json is not None:    # 默认为None
             with open(self.config.import_edit_json, "r") as f:
                 file_edit_info = json.load(f)
                 for edit in file_edit_info:

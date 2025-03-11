@@ -207,6 +207,7 @@ class Trainer:
         param_groups = self.pipeline.get_param_groups()
         return Optimizers(optimizer_config, param_groups)
 
+    # 开始训练
     def train(self) -> None:
         """Train the model."""
         assert self.pipeline.datamanager.train_dataset is not None, "Missing DatsetInputs"
@@ -219,12 +220,15 @@ class Trainer:
         with TimeWriter(writer, EventName.TOTAL_TRAIN_TIME):
             num_iterations = self.config.max_num_iterations
             step = 0
+            # 迭代
             for step in range(self._start_step, self._start_step + num_iterations):
                 while self.training_state == "paused":
                     time.sleep(0.01)
 
                 with self.train_lock:
                     with TimeWriter(writer, EventName.ITER_TRAIN_TIME, step=step) as train_t:
+
+                        # 真正的训练
                         self.pipeline.train()
 
                         # training callbacks before the training iteration
